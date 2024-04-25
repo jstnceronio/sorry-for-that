@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['qwiklab_badge_checker.py'],
+a = Analysis(['main.py'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='qwiklab_badge_checker',
+          name='sorry-for-that',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
