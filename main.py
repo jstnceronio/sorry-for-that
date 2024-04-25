@@ -9,7 +9,7 @@ import openai
 from dotenv import load_dotenv
 import requests
 import pyperclip as pc
-import pyfiglet
+# import pyfiglet
 from pathlib import Path
 
 
@@ -121,7 +121,7 @@ class ClipboardImageHandler:
 
 if __name__ == "__main__":
     handler = ClipboardImageHandler()
-    print(pyfiglet.figlet_format("Sorry for that"))
+    # print(pyfiglet.figlet_format("Sorry for that"))
     print("You are using the windows version of 'Sorry for that', welcome!")
 
     dotenv_file = Path('.env')
