@@ -9,14 +9,7 @@ import openai
 from dotenv import load_dotenv
 import requests
 import pyperclip as pc
-
-# Configuration
-load_dotenv(".env")
-API_KEY = os.environ.get("OPENAI_API_KEY")
-openai.api_key = API_KEY
-WOLFRAM_API_URL = 'http://api.wolframalpha.com/v2/query'
-WOLFRAM_API_KEY = os.environ.get("WOLFRAM_API_KEY")
-
+import pyfiglet
 
 def image_to_hash(img):
     """Convert an image to a hash for easy comparison."""
@@ -71,7 +64,7 @@ class ClipboardImageHandler:
         """Send base64 encoded image to ChatGPT."""
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {API_KEY}"
+            "Authorization": f"Bearer {OPENAI_API_KEY}"
         }
         payload = {
             "model": "gpt-4-vision-preview",
@@ -126,6 +119,27 @@ class ClipboardImageHandler:
 
 if __name__ == "__main__":
     handler = ClipboardImageHandler()
+    print(pyfiglet.figlet_format("Sorry for that"))
+    print("You are using the windows version of 'Sorry for that', welcome!")
+    has_dotenv = False
+
+    # if .env file is missing, create it
+    if not has_dotenv:
+        print("It seems like you're using 'Sorry for that' for the first time")
+        print("Let's create an environment file to store your API keys")
+        OPENAI_API_KEY = input('Enter your Chat GPT API Key')
+        WOLFRAM_API_KEY = input('Enter your Chat GPT API Key')
+        # create file
+    else:
+        print("We're sorted. Let's get started.")
+
+    # Configuration
+    load_dotenv(".env")
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+    openai.api_key = OPENAI_API_KEY
+    WOLFRAM_API_URL = 'http://api.wolframalpha.com/v2/query'
+    WOLFRAM_API_KEY = os.environ.get("WOLFRAM_API_KEY")
+
     print("Monitoring clipboard for screenshots. Press Ctrl+C to exit.")
     try:
         while True:
