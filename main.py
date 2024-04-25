@@ -1,107 +1,78 @@
-import base64
+import io
 import time
 import os
+import hashlib
+import base64
 import win32com.client
-
-import PIL.ImageGrab
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from PIL import ImageGrab
 import openai
 from dotenv import load_dotenv
 import requests
 import pyperclip as pc
-from datetime import datetime
 
 # Configuration
-picturefilepath = os.path.join("C:\\Users\\asael\\Downloads\\")
-WATCH_DIRECTORY = picturefilepath  # os.path.join(".", "img")
 load_dotenv(".env")
 API_KEY = os.environ.get("OPENAI_API_KEY")
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+openai.api_key = API_KEY
 WOLFRAM_API_URL = 'http://api.wolframalpha.com/v2/query'
 WOLFRAM_API_KEY = os.environ.get("WOLFRAM_API_KEY")
 
 
-class ScreenshotEventHandler(FileSystemEventHandler):
+def image_to_hash(img):
+    """Convert an image to a hash for easy comparison."""
+    hash_obj = hashlib.sha256()
+    hash_obj.update(img.tobytes())
+    return hash_obj.hexdigest()
 
-    # txtoclipboard checks if result isn't on clipboard and if no copies result to clipboard.
-    # After this it makes a notification with the keyboard press Capslock and prints a report.
-    def txt_to_clipboard(self, result):
-        p = True
-        while p:
-            if result != pc.paste():
-                pc.copy(str(result))
-                if result == pc.paste():
-                    shell = win32com.client.Dispatch("WScript.Shell")
-                    shell.SendKeys("{CAPSLOCK}")  # Press Capslock to lock
-                    time.sleep(1)  # time for User to recognize the Capslock
-                    shell.SendKeys("{CAPSLOCK}")  # Press Capslock to unlock
-                    print("Answer successfully copied to clipboard")  # Report of txtoclipboard
-                p = False
 
-    # picturesave Observes the clipboard for new pictures in it. If detected the picture gets saved.
-    # The Folder location gets set by the variable picturefilepath. The name is a Timestamp (Hours, Minutes, Seconds)
-    # At the end picturesave prints a report of the operation.
-    def safe_picture(self, picturefilepath):
-        rx = PIL.ImageGrab.grabclipboard()  # initialises rx for observing function.
-        now = datetime.now()  # Something for the timestamp
-        p = True
-        while p:
-            if rx != PIL.ImageGrab.grabclipboard():  # check for new pictures in clipboard
-                rx = PIL.ImageGrab.grabclipboard()
-                time = now.strftime("%H_%M_%S")  # gets timestamp
-                fp = picturefilepath + time + ".png"  # builds filename& path
-                rx.save(fp)  # saves clipboard
-                rx.close()  # closes picture
-                print("Picture successfully saved.", fp)  # reports operation
-                p = False  # kills while loop
+class ClipboardImageHandler:
+    def __init__(self):
+        self.last_hash = None
 
-    def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith(('.png', '.jpg', '.jpeg')):
-            time.sleep(1)
-            print(f"Screenshot detected: {event.src_path}")
-            self.process_screenshot(event.src_path)
+    def check_clipboard_for_screenshot(self):
+        """Check the clipboard for images and process if it's a new screenshot."""
+        try:
+            img = ImageGrab.grabclipboard()  # Try to get an image from the clipboard
+            if img is not None:
+                current_hash = image_to_hash(img)
+                if current_hash != self.last_hash:
+                    print("New screenshot detected in the clipboard!")
+                    self.process_screenshot(img)
+                    self.last_hash = current_hash
+                else:
+                    print("Duplicate screenshot detected. Not processing.")
+        except Exception as e:
+            print("Error:", e)
 
-    def process_screenshot(self, filepath):
-        base64_image = self.encode_image(filepath)
+    def process_screenshot(self, img):
+        base64_image = self.encode_image(img)
         gpt_response = self.send_image_to_chatgpt(base64_image)
         print(f"ChatGPT Response: {gpt_response}")
         wolfram_response = self.query_wolfram_alpha(gpt_response)
         result = self.parse_wolfram_response(wolfram_response)
+
+        pc.copy(str(result))
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shell.SendKeys("{CAPSLOCK}")  # Press Capslock to lock
+        time.sleep(2)  # time for User to recognize the Capslock
+        shell.SendKeys("{CAPSLOCK}")  # Press Capslock to unlock
         print("Solution:", result)
-        self.txt_to_clipboard(result)
+        print("Answer successfully copied to clipboard")  # Report of txtoclipboard
 
-    def query_wolfram_alpha(self, query):
-        params = {
-            'input': query,
-            'format': 'plaintext',
-            'output': 'JSON',
-            'appid': WOLFRAM_API_KEY,
-        }
-        response = requests.get(WOLFRAM_API_URL, params=params)
-        response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
-        return response.json()
-
-    def parse_wolfram_response(self, response):
-        try:
-            pods = response['queryresult']['pods']
-            for pod in pods:
-                if pod['title'] == 'Result':
-                    return pod['subpods'][0]['plaintext']
-        except (KeyError, IndexError):
-            return "Couldn't find a solution."
-
-    def encode_image(self, image_path):
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
+    def encode_image(self, img):
+        """Encode image object to base64, converting RGBA to RGB if necessary."""
+        if img.mode != 'RGB':
+            img = img.convert('RGB')  # Convert RGBA to RGB
+        buffered = io.BytesIO()
+        img.save(buffered, format="JPEG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def send_image_to_chatgpt(self, base64_image):
-
+        """Send base64 encoded image to ChatGPT."""
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {API_KEY}"
         }
-
         payload = {
             "model": "gpt-4-vision-preview",
             "messages": [
@@ -110,7 +81,7 @@ class ScreenshotEventHandler(FileSystemEventHandler):
                     "content": [
                         {
                             "type": "text",
-                            "text": "Your task is to prepare a correctly formatted prompt for the wolfram api in order to solve given math problem. You shall only return the prompt without explenation that I then will send to the Wolfram API"
+                            "text": "Your task is to prepare a correctly formatted prompt for the wolfram api in order to solve given math problem. You shall only return the prompt without explanation that I then will send to the Wolfram API"
                         },
                         {
                             "type": "image_url",
@@ -130,16 +101,35 @@ class ScreenshotEventHandler(FileSystemEventHandler):
             print(f"Error sending text to ChatGPT: {e}")
             return None
 
+    def query_wolfram_alpha(self, query):
+        """Query Wolfram Alpha with given query string."""
+        params = {
+            'input': query,
+            'format': 'plaintext',
+            'output': 'JSON',
+            'appid': WOLFRAM_API_KEY,
+        }
+        response = requests.get(WOLFRAM_API_URL, params=params)
+        response.raise_for_status()  # Raises an HTTPError if the response code was unsuccessful
+        return response.json()
+
+    def parse_wolfram_response(self, response):
+        """Parse response from Wolfram Alpha."""
+        try:
+            pods = response['queryresult']['pods']
+            for pod in pods:
+                if pod['title'] == 'Result':
+                    return pod['subpods'][0]['plaintext']
+        except (KeyError, IndexError):
+            return "Couldn't find a solution."
+
 
 if __name__ == "__main__":
-
-    while True:
-        event_handler = ScreenshotEventHandler()
-        observer = Observer()
-        observer.schedule(event_handler, WATCH_DIRECTORY, recursive=False)
-        observer.start()  # starts file observer
-        print(f"Monitoring {WATCH_DIRECTORY} for new screenshots...")  # prints file observer startup
-        event_handler.safe_picture(picturefilepath)  # starts Clipboard observer
-        observer.stop()  # kills observer funktion to ensure that only one observer exsists at the time.
-        time.sleep(1)  # saefty sleep to ensure, that txtoclipboard and its function pyperclip has finished truly
-        # and doesn't interact with PIL.ImageGrab.grabclipboard from picturesave.
+    handler = ClipboardImageHandler()
+    print("Monitoring clipboard for screenshots. Press Ctrl+C to exit.")
+    try:
+        while True:
+            handler.check_clipboard_for_screenshot()
+            time.sleep(1)  # Check every 1 second
+    except KeyboardInterrupt:
+        print("Exited by user.")
