@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 import requests
 import pyperclip as pc
 import pyfiglet
+from pathlib import Path
+
 
 def image_to_hash(img):
     """Convert an image to a hash for easy comparison."""
@@ -121,15 +123,19 @@ if __name__ == "__main__":
     handler = ClipboardImageHandler()
     print(pyfiglet.figlet_format("Sorry for that"))
     print("You are using the windows version of 'Sorry for that', welcome!")
-    has_dotenv = False
 
-    # if .env file is missing, create it
-    if not has_dotenv:
+    dotenv_file = Path('.env')
+
+    if not dotenv_file.is_file():
         print("It seems like you're using 'Sorry for that' for the first time")
         print("Let's create an environment file to store your API keys")
         OPENAI_API_KEY = input('Enter your Chat GPT API Key')
         WOLFRAM_API_KEY = input('Enter your Chat GPT API Key')
-        # create file
+        file_name = '.env.test.test'
+        f = open(file_name, 'a+')  # open file in append mode
+        f.write('OPENAI_API_KEY=' + OPENAI_API_KEY + '\n')
+        f.write('WOLFRAM_API_KEY=' + WOLFRAM_API_KEY)
+        f.close()
     else:
         print("We're sorted. Let's get started.")
 
@@ -140,7 +146,7 @@ if __name__ == "__main__":
     WOLFRAM_API_URL = 'http://api.wolframalpha.com/v2/query'
     WOLFRAM_API_KEY = os.environ.get("WOLFRAM_API_KEY")
 
-    print("Monitoring clipboard for screenshots. Press Ctrl+C to exit.")
+    print("Monitoring clipboard for screenshots. Press Ctrl+C to exit. \n")
     try:
         while True:
             handler.check_clipboard_for_screenshot()
