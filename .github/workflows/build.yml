@@ -2,7 +2,7 @@ name: Build Workflow
 
 on:
   push:
-#    branches: master
+    # branches: master
 
 jobs:
   build-windows:
@@ -10,42 +10,55 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install Python
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.8'
           architecture: 'x64'
+
       - name: Install requirements
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
+
       - name: Run PyInstaller
-        run: |
-          python -m PyInstaller application.spec
-      - uses: actions/upload-artifact@v2
+        run: python -m PyInstaller application.spec
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v2
         with:
           name: Windows_qwiklabs
           path: dist/sorry-for-that.exe
 
-      - name: create release
-        id: create_release
+      - name: Fetch tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Determine new tag
+        id: new_tag
+        run: |
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $LATEST_TAG"
+          NEW_TAG="v$(echo $LATEST_TAG | sed -E 's/v([0-9]+)\.([0-9]+)\.([0-9]+)/echo $((\1*10000+\2*100+\3+1))/' | bc | sed -E 's/([0-9]{1,5})([0-9]{2})([0-9]{2})/\1.\2.\3/')"
+          echo "New tag: $NEW_TAG"
+          echo "::set-output name=new_tag::$NEW_TAG"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.event.head_commit.message }}
-          release_name: ${{ github.event.head_commit.message }}
-          overwrite: true
-          body: |
-            Test Release v1.0.0
+          tag_name: ${{ steps.new_tag.outputs.new_tag }}
+          release_name: Release ${{ steps.new_tag.outputs.new_tag }}
+          body: 'Automatically generated release for ${NEW_TAG}'
           draft: false
           prerelease: false
+
       - name: Upload Release Asset
-        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{steps.create_release.outputs.upload_url}}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/sorry-for-that.exe
           asset_name: sorry-for-that.exe
-          asset_content_type: application/zip
+          asset_content_type: application/octet-stream
