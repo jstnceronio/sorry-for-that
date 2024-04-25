@@ -152,4 +152,4 @@ if __name__ == "__main__":
             handler.check_clipboard_for_screenshot()
             time.sleep(1)  # Check every 1 second
     except KeyboardInterrupt:
-        print("Exited by user.")
+        print("Exited by user. ")
