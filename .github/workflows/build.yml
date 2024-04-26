@@ -42,7 +42,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env:BUILD_NUMBER }}
+          tag_name: ${{ steps.buildnumber.outputs.build_number }}
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
           body: 'Automatically generated release for ${NEW_TAG}'
           draft: false
