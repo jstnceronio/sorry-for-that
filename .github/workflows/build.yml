@@ -26,13 +26,8 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v2
         with:
-          name: Windows_qwiklabs
+          name: Sorry for that
           path: dist/sorry-for-that.exe
-
-      - name: Generate build number
-        uses: onyxmueller/build-tag-number@v1
-        with:
-          token: ${ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         uses: actions/create-release@v1
