@@ -17,6 +17,9 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
+      - name: Build Tag Number
+        uses: onyxmueller/build-tag-number@v1.0.3
+
       - name: Install requirements
         run: pip install -r requirements.txt
 
@@ -29,30 +32,17 @@ jobs:
           name: Windows_qwiklabs
           path: dist/sorry-for-that.exe
 
-      - name: Fetch tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Determine new tag
-        id: new_tag
-        run: |
-          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1` 2>/dev/null)
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No existing tags found. Using initial tag v0.1.0"
-            NEW_TAG="v0.1.0"
-          else
-            echo "Latest tag: $LATEST_TAG"
-            NEW_TAG=$(echo $LATEST_TAG | awk -F. '{OFS="."; $$NF += 1; print}')
-          fi
-          echo "New tag: $NEW_TAG"
-          echo "::set-output name=new_tag::$NEW_TAG"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+      - name: Generate build number
+        uses: onyxmueller/build-tag-number@v1
+        with:
+          token: ${ secrets.GITHUB_TOKEN }}
 
       - name: Create release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.new_tag.outputs.new_tag }}
+          tag_name: ${{ $BUILD_NUMBER }}
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
           body: 'Automatically generated release for ${NEW_TAG}'
           draft: false
