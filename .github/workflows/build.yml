@@ -17,9 +17,6 @@ jobs:
           python-version: '3.8'
           architecture: 'x64'
 
-      - name: Build Tag Number
-        uses: onyxmueller/build-tag-number@v1.0.3
-
       - name: Install requirements
         run: pip install -r requirements.txt
 
@@ -42,7 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.buildnumber.outputs.build_number }}
+          tag_name: v1.0
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
           body: 'Automatically generated release for ${NEW_TAG}'
           draft: false
