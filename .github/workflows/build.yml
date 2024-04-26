@@ -29,15 +29,19 @@ jobs:
           name: Sorry for that
           path: dist/sorry-for-that.exe
 
+      - name: Generate tag
+        id: new_tag
+        run: echo "::set-output name=new_tag::release-$(date +'%Y%m%d%H%M%S')"
+
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v1.0
+          tag_name: ${{ steps.new_tag.outputs.new_tag }}
           release_name: Release ${{ steps.new_tag.outputs.new_tag }}
-          body: 'Automatically generated release for ${NEW_TAG}'
+          body: 'Automatically generated release for ${{ steps.new_tag.outputs.new_tag }}'
           draft: false
           prerelease: false
 
