@@ -129,8 +129,8 @@ if __name__ == "__main__":
     if not dotenv_file.is_file():
         print("It seems like you're using 'Sorry for that' for the first time")
         print("Let's create an environment file to store your API keys")
-        OPENAI_API_KEY = input('Enter your Chat GPT API Key')
-        WOLFRAM_API_KEY = input('Enter your Chat GPT API Key')
+        OPENAI_API_KEY = input('Enter your Chat GPT API Key: ')
+        WOLFRAM_API_KEY = input('Enter your Wolfram Alpha API Key: ')
         file_name = '.env.test.test'
         f = open(file_name, 'a+')  # open file in append mode
         f.write('OPENAI_API_KEY=' + OPENAI_API_KEY + '\n')
