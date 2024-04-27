@@ -131,7 +131,7 @@ if __name__ == "__main__":
         print("Let's create an environment file to store your API keys")
         OPENAI_API_KEY = input('Enter your Chat GPT API Key: ')
         WOLFRAM_API_KEY = input('Enter your Wolfram Alpha API Key: ')
-        file_name = '.env.test.test'
+        file_name = '.env'
         f = open(file_name, 'a+')  # open file in append mode
         f.write('OPENAI_API_KEY=' + OPENAI_API_KEY + '\n')
         f.write('WOLFRAM_API_KEY=' + WOLFRAM_API_KEY)
