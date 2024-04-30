@@ -1,23 +1,17 @@
-import io
 import time
 import os
-import hashlib
-import base64
 import win32com.client
-from PIL import ImageGrab
-import openai
 from dotenv import load_dotenv
 import requests
 import pyperclip as pc
-# import pyfiglet
 from pathlib import Path
 
 
 class ClipboardImageHandler:
 
-    PROMPT = ('Gegeben sind entweder ein französisches Verb und weitere Angaben oder ein deutsches Verb, '
+    PROMPT = ('Gegeben sind entweder ein französisches Verb und weitere Angaben oder ein deutsches / französisches Verb, '
               'Im Falle des französischen Verbes, konjugiere das folgende Verb gemäss Vorgaben. '
-              'Im Falle des deutschen Verbes, übersetze es auf französisch. '
+              'Im Falle des Verbes, übersetze es auf die andere Sprache (Deutsch / Französisch). '
               'Antworte nur immer nur mit der eigentlichen Antwort')
 
 
@@ -90,15 +84,13 @@ if __name__ == "__main__":
     Zeit:	
     indicatif présent actif
     """
-    # Send prompt to gpt: "Konjugiere das folgende Verb gemäss Vorgaben, antworte nur mit konjugierten Verb:"
     handler = ClipboardImageHandler()
-    # print(pyfiglet.figlet_format("Sorry for that"))
     print("You are using the windows version of 'Sorry for that', welcome!")
 
     dotenv_file = Path('.env')
 
     if not dotenv_file.is_file():
-        print("It seems like you're using 'Sorry for that' for the first time")
+        print("It seems like you're using 'Pas de soucis' for the first time")
         print("Let's create an environment file to store your API keys")
         OPENAI_API_KEY = input('Enter your Chat GPT API Key')
         file_name = '.env'
