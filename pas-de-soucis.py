@@ -8,12 +8,11 @@ from pathlib import Path
 
 
 class ClipboardImageHandler:
-
-    PROMPT = ('Gegeben sind entweder ein französisches Verb und weitere Angaben oder ein deutsches / französisches Verb, '
-              'Im Falle des französischen Verbes, konjugiere das folgende Verb gemäss Vorgaben. '
-              'Im Falle des Verbes, übersetze es auf die andere Sprache (Deutsch / Französisch). '
-              'Antworte nur immer nur mit der eigentlichen Antwort')
-
+    PROMPT = (
+        'Gegeben sind entweder ein französisches Verb und weitere Angaben oder ein deutsches / französisches Verb, '
+        'Im Falle des französischen Verbes, konjugiere das folgende Verb gemäss Vorgaben. '
+        'Im Falle des Verbes, übersetze es auf die andere Sprache (Deutsch / Französisch). '
+        'Antworte nur immer nur mit der eigentlichen Antwort')
 
     def __init__(self):
         self.last_hash = None
