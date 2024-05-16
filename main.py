@@ -43,15 +43,15 @@ class ClipboardImageHandler:
         base64_image = self.encode_image(img)
         gpt_response = self.send_image_to_chatgpt(base64_image)
         print(f"ChatGPT Response: {gpt_response}")
-        wolfram_response = self.query_wolfram_alpha(gpt_response)
-        result = self.parse_wolfram_response(wolfram_response)
+        # wolfram_response = self.query_wolfram_alpha(gpt_response)
+        # result = self.parse_wolfram_response(wolfram_response)
 
-        pc.copy(str(result))
+        pc.copy(self.get_last_line(str(gpt_response)))
         shell = win32com.client.Dispatch("WScript.Shell")
         shell.SendKeys("{CAPSLOCK}")  # Press Capslock to lock
         time.sleep(2)  # time for User to recognize the Capslock
         shell.SendKeys("{CAPSLOCK}")  # Press Capslock to unlock
-        print("Solution:", result)
+        # print("Solution:", result)
         print("Answer successfully copied to clipboard")  # Report of txtoclipboard
 
     def encode_image(self, img):
@@ -62,6 +62,12 @@ class ClipboardImageHandler:
         img.save(buffered, format="JPEG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
+    def get_last_line(self, text):
+        # Split the text into lines
+        lines = text.splitlines()
+        # Return the last line
+        return lines[-1] if lines else ''
+
     def send_image_to_chatgpt(self, base64_image):
         """Send base64 encoded image to ChatGPT."""
         headers = {
@@ -69,14 +75,14 @@ class ClipboardImageHandler:
             "Authorization": f"Bearer {OPENAI_API_KEY}"
         }
         payload = {
-            "model": "gpt-4-vision-preview",
+            "model": "gpt-4o",
             "messages": [
                 {
                     "role": "user",
                     "content": [
                         {
                             "type": "text",
-                            "text": "Your task is to prepare a correctly formatted prompt for the wolfram api in order to solve given math problem. You shall only return the prompt without explanation that I then will send to the Wolfram API"
+                            "text": "Löse die folgende Gleichung. Nenne die Antwort immer in der letzten Zeile."
                         },
                         {
                             "type": "image_url",
@@ -87,7 +93,7 @@ class ClipboardImageHandler:
                     ]
                 }
             ],
-            "max_tokens": 300
+            "max_tokens": 600
         }
         try:
             response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
