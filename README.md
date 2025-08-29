@@ -1,4 +1,4 @@
-# sorry-for-that (wip)
+# sorry-for-that
 
 Reads text from image using OCR then sends it to the OpenAI API.
 
